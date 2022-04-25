@@ -29,8 +29,7 @@ enemy_laser_group = pygame.sprite.Group()
 enemy_group = pygame.sprite.Group()
 comet_group = pygame.sprite.Group()
 player_group.add(player)
-player_group.add(health_bar)
-player_group.add(laser_bar)
+
 frameIndex = 0
 clock = pygame.time.Clock()
 last_shot = pygame.time.get_ticks()
@@ -42,6 +41,38 @@ last_spawned = pygame.time.get_ticks()
 
 font = pygame.font.Font('freesansbold.ttf', int(screenSize[0] * 0.1))
 kills = 0
+bruh = True
+while running and bruh:
+    frameIndex += 1
+
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+        if event.type == pygame.KEYDOWN or event.type == pygame.MOUSEBUTTONDOWN:
+            bruh = False
+
+    if len(comet_group) < max_comet:
+        comet_group.add(Comet(screenSize, random.random() > 0.5, screenSize[0] * 0.05))
+
+    screen.fill((0, 0, 20))
+    player.rotate(pygame.mouse.get_pos())
+    player_group.update()
+    comet_group.update()
+    gameOverIndicator = font.render('Spacey 2.0', True, (30, 30, 30))
+    screen.blit(gameOverIndicator, (screenSize[0] * 0.08, screenSize[1] * 0.45))
+
+    comet_group.draw(screen)
+    player_group.draw(screen)
+
+    if frameIndex % 50 < 20:
+        gameOverIndicator = font.render('Spacey 2.0', True, (50, 50, 50))
+        screen.blit(gameOverIndicator, (screenSize[0] * 0.08, screenSize[1] * 0.45))
+
+    pygame.display.flip()
+    dt = clock.tick(60)
+player_group.add(health_bar)
+player_group.add(laser_bar)
+
 while running:
     frameIndex += 1
 
@@ -80,7 +111,7 @@ while running:
 
     if pygame.time.get_ticks() - last_enemy > DIFFICULTY:
         level += 1
-        SPAWN_RATE /= 1.5
+        SPAWN_RATE /= 1.001
         last_enemy = pygame.time.get_ticks()
 
     aa = pygame.sprite.groupcollide(laser_group, comet_group, False, False)
@@ -104,9 +135,10 @@ while running:
         if collided_enemy.dying == 10:
             player.health -= 10
             collided_enemy.collide()
-
+            kills += level
     for enemy_object in collided:
         enemy_object.collide()
+        kills += level
     for enemy_object in enemy_group:
         if enemy_object.canShoot and pygame.time.get_ticks() - enemy_object.lastFired > 4000:
             enemy_object.lastFired = pygame.time.get_ticks()
@@ -121,14 +153,46 @@ while running:
     comet_group.update()
     levelIndicator = font.render(f'Level: {level}', True, (10, 10, 30))
     screen.blit(levelIndicator, (screenSize[0] * 0.1, screenSize[1] * 0.2))
+    levelIndicator = font.render(f'Score: {kills}', True, (10, 10, 30))
+    screen.blit(levelIndicator, (screenSize[0] * 0.1, screenSize[1] * 0.7))
     laser_group.draw(screen)
     enemy_laser_group.draw(screen)
     comet_group.draw(screen)
     player_group.draw(screen)
     enemy_group.draw(screen)
-
+    if player.health <= 0:
+        break
 
     # Flip the display
+    pygame.display.flip()
+    dt = clock.tick(60)
+health_bar.kill()
+laser_bar.kill()
+
+while running:
+    frameIndex += 1
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+    screen.fill((0, 0, 20))
+    player_group.update()
+    comet_group.update()
+    levelIndicator = font.render(f'Level: {level}', True, (10, 10, 30))
+    screen.blit(levelIndicator, (screenSize[0] * 0.1, screenSize[1] * 0.2))
+    gameOverIndicator = font.render(f'GAME OVER!', True, (30, 30, 30))
+    screen.blit(gameOverIndicator, (screenSize[0] * 0.08, screenSize[1] * 0.45))
+    levelIndicator = font.render(f'Score: {kills}', True, (10, 10, 30))
+    screen.blit(levelIndicator, (screenSize[0] * 0.1, screenSize[1] * 0.7))
+
+    comet_group.draw(screen)
+    player_group.draw(screen)
+    if frameIndex % 50 < 20:
+        levelIndicator = font.render(f'Level: {level}', True, (30, 30, 30))
+        screen.blit(levelIndicator, (screenSize[0] * 0.1, screenSize[1] * 0.2))
+        gameOverIndicator = font.render(f'GAME OVER!', True, (50, 50, 50))
+        screen.blit(gameOverIndicator, (screenSize[0] * 0.08, screenSize[1] * 0.45))
+        levelIndicator = font.render(f'Score: {kills}', True, (30, 30, 30))
+        screen.blit(levelIndicator, (screenSize[0] * 0.1, screenSize[1] * 0.7))
     pygame.display.flip()
     dt = clock.tick(60)
 # Done! Time to quit.
